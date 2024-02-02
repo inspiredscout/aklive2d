@@ -6,14 +6,9 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use PNPM
         uses: pnpm/action-setup@v2
         with:
@@ -32,3 +27,14 @@ jobs:
           projectName: aklive2d
           directory: release
           wranglerVersion: '3'
+      - uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r release.zip release
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Latest Build"
+          files: |
+            release.zip
