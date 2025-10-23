@@ -1,16 +1,17 @@
 import path from 'node:path'
-import { file } from '@aklive2d/libs'
-import { githubDownload } from '@aklive2d/downloader'
+import { files as backgroundFiles } from '@aklive2d/background'
 import config from '@aklive2d/config'
+import { githubDownload } from '@aklive2d/downloader'
+import { envParser, file } from '@aklive2d/libs'
 import type {
-    DisplayMetaTable,
     AudioDataTable,
-    MusicTable,
+    DisplayMetaTable,
+    MusicDataItem,
     MusicFileMapping,
     MusicFiles,
     MusicItem,
-    MusicDataItem,
     MusicMapping,
+    MusicTable,
 } from './types.ts'
 
 const AUTO_UPDATE_FOLDER = path.resolve(
@@ -49,6 +50,15 @@ const download = async () => {
 }
 
 const generateMapping = () => {
+    const { mode } = envParser.parse({
+        mode: {
+            type: 'string',
+            short: 'm',
+        },
+    })
+    if (mode === 'update') {
+        return
+    }
     const musicFolder = DATA_DIR
     const musicTableContent = file.readSync(MUSIC_TABLE_JSON)
     const musicTable: MusicTable = musicTableContent
@@ -85,6 +95,41 @@ const generateMapping = () => {
         }
     }
 
+    for (const e of musicFiles) {
+        const musicPath = path.join(e.source, e.filename)
+        if (!file.exists(musicPath)) {
+            throw new Error(
+                `Music file ${e.filename} is not found in music folder.`
+            )
+        }
+    }
+
+    for (const e of Object.keys(musicFileMapping)) {
+        if (!backgroundFiles.includes(e)) {
+            throw new Error(
+                `Background file ${e} is not found in background folder.`
+            )
+        }
+    }
+
+    for (const background of backgroundFiles) {
+        if (!musicFileMapping[background]) {
+            const alternativeMatch = background.replace(
+                /_(form)(.*)(\.png)$/,
+                '$3'
+            )
+            if (musicFileMapping[alternativeMatch]) {
+                musicFileMapping[background] = structuredClone(
+                    musicFileMapping[alternativeMatch]
+                )
+            } else {
+                throw new Error(
+                    `Music mapping for background file ${background} is not found in music mapping.`
+                )
+            }
+        }
+    }
+
     return {
         musicFiles,
         musicFileMapping,
@@ -101,7 +146,8 @@ export const update = async () => {
     const musicData: MusicDataItem[] =
         metaTable.homeBackgroundData.homeBgDataList.reduce((acc, cur) => {
             if (cur.multiFormList.length > 1)
-                console.warn(`${cur.bgId} has multiple musicIds`)
+            // TODO: support multiple backgrounds
+                console.warn(`${cur.bgId} has multiple musicIds`, cur.multiFormList)
             acc.push({
                 id: cur.bgId,
                 musicId: cur.multiFormList[0].bgMusicId,

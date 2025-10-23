@@ -1,13 +1,13 @@
 import path from 'node:path'
 import config from '@aklive2d/config'
-import { file, alphaComposite } from '@aklive2d/libs'
+import { alphaComposite, file } from '@aklive2d/libs'
 import operators, {
     DIST_DIR,
-    OPERATOR_SOURCE_FOLDER,
     generateAssetsJson,
+    OPERATOR_SOURCE_FOLDER,
 } from '../index.ts'
-import { getExtractedFolder, getDistFolder } from './utils.ts'
 import type { PortraitHub, PortraitJson } from '../types.ts'
+import { getDistFolder, getExtractedFolder } from './utils.ts'
 
 export const build = async (namesToBuild: string[]) => {
     const names = !namesToBuild.length ? Object.keys(operators) : namesToBuild
@@ -73,9 +73,10 @@ const generateAssets = async (name: string) => {
     ) as string
     if (!portraitHubContent) throw new Error('portrait_hub.json not found')
     const portraitHub: PortraitHub = JSON.parse(portraitHubContent)
-    const fallback_name_lowerCase = fallback_name.toLowerCase()
+    const portrait_filename_lowerCase =
+        operators[name].portrait_filename.toLowerCase()
     const portraitItem = portraitHub._sprites.find(
-        (item) => item.name.toLowerCase() === fallback_name_lowerCase
+        (item) => item.name.toLowerCase() === portrait_filename_lowerCase
     )
     if (!portraitItem) throw new Error(`portrait ${fallback_name} not found`)
     const portraitAtlas = portraitItem.atlas
@@ -90,7 +91,7 @@ const generateAssets = async (name: string) => {
         throw new Error(`portrait ${fallback_name} json not found`)
     const portraitJson: PortraitJson = JSON.parse(portraitJsonText)
     const item = portraitJson._sprites.find(
-        (item) => item.name.toLowerCase() === fallback_name_lowerCase
+        (item) => item.name.toLowerCase() === portrait_filename_lowerCase
     )
     if (!item) throw new Error(`portrait ${fallback_name} not found`)
     const rect = {

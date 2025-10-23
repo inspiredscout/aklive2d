@@ -1,17 +1,17 @@
 import path from 'node:path'
+import { type UnzipDownloadItem, unzipDownload } from '@aklive2d/downloader'
 import { file } from '@aklive2d/libs'
-import { unzipDownload, type UnzipDownloadItem } from '@aklive2d/downloader'
-import { getOperatorId, getOperatorAlternativeId } from '@aklive2d/operator'
 import { mapping } from '@aklive2d/music'
+import { getOperatorAlternativeId, getOperatorId } from '@aklive2d/operator'
 import config from '../index.ts'
-import type { UpdateList, ItemToDownload, AbInfosItem } from '../types.ts'
+import type { AbInfosItem, ItemToDownload, UpdateList } from '../types.ts'
 
 export default async (dataDir: string) => {
     await Promise.all(
         config.servers.map(async (server) => {
             const networkConfResp = await fetch(server.url)
             const networkConf = JSON.parse(
-                (await networkConfResp.json()).content.replace('\\', '')
+                (await networkConfResp.json()).content.replace(/\\/g, '')
             )
             const funcVer = networkConf.funcVer
             const networkConfUrls = networkConf.configs[funcVer].network
@@ -48,7 +48,9 @@ const download = async (
     })
     mapping.musicFiles.map((item) => {
         if (!file.exists(path.join(item.source, item.filename))) {
-            const filename = item.filename.replace('.ogg', '')
+            const filename = item.filename
+                .replace('.ogg', '')
+                .replace(/_(intro|loop)/, '')
             itemToDownload.add(filename)
         }
     })
@@ -73,6 +75,7 @@ const download = async (
             regexs.push(new RegExp(item))
         }
     }
+    console.log(lpacksToDownload, itemToDownloadRegExp, regexs)
     await unzipDownload(lpacksToDownload, dataDir, {
         matchRegExps: regexs,
         defaultRegex: itemToDownloadRegExp,

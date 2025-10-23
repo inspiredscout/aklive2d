@@ -1,31 +1,29 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import PropTypes from 'prop-types'
-import { NavLink, Link } from 'react-router-dom'
-import classes from '@/scss/home/Home.module.scss'
-import { useConfig } from '@/state/config'
-import { useI18n } from '@/state/language'
-import { useLanguage } from '@/state/language'
-import { useHeader } from '@/state/header'
-import { useAppbar } from '@/state/appbar'
-import VoiceElement from '@/component/voice'
+import buildConfig from '!/config.json'
 import { useAtom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
-import CharIcon from '@/component/char_icon'
+import PropTypes from 'prop-types'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import Border from '@/component/border'
-import useInsight from '@/state/insight'
-import Switch from '@/component/switch'
+import CharIcon from '@/component/char_icon'
 import SearchBox from '@/component/search_box'
-import buildConfig from '!/config.json'
+import Switch from '@/component/switch'
+import VoiceElement from '@/component/voice'
+import classes from '@/scss/home/Home.module.scss'
+import { useAppbar } from '@/state/appbar'
+import { useConfig } from '@/state/config'
+import { useHeader } from '@/state/header'
+import useInsight from '@/state/insight'
+import { useI18n, useLanguage } from '@/state/language'
 
 const voiceOnAtom = atomWithStorage('voiceOn', false)
 let lastVoiceState = 'ended'
 
 export default function Home() {
-    // eslint-disable-next-line
     const _trackEvt = useInsight()
     const { setTitle, setTabs, currentTab, setHeaderIcon, setFastNavigation } =
         useHeader()
-    const { config, operators, officialUpdate } = useConfig()
+    const { config, operators, newOperators } = useConfig()
     const { i18n } = useI18n()
     const [content, setContent] = useState([])
     const [voiceOn] = useAtom(voiceOnAtom)
@@ -176,7 +174,7 @@ export default function Home() {
 
     return (
         <section>
-            {officialUpdate.length > operators.length && (
+            {newOperators.length > 0 && (
                 <section>
                     <section
                         className={`${classes['official-update']} ${classes.group}`}
@@ -184,127 +182,112 @@ export default function Home() {
                         <section className={classes.info}>
                             <section className={classes.content}>
                                 <section className={classes.text}>
-                                    {officialUpdate.length - operators.length}{' '}
-                                    {i18n('new_op_wait_to_update')}
+                                    {`${newOperators.length} ${i18n('new_op_wait_to_update')}`}
                                 </section>
                                 <section
                                     className={`${classes['styled-selection']}`}
                                 >
-                                    {officialUpdate.info
-                                        .filter(
-                                            (e) =>
-                                                !operators.find(
-                                                    (o) =>
-                                                        o.official_id ===
-                                                        e.id.toString()
-                                                )
-                                        )
-                                        .map((entry, index) => {
-                                            return (
-                                                <Link
-                                                    reloadDocument
-                                                    to={entry.link}
-                                                    target="_blank"
-                                                    style={{
-                                                        color: entry.color,
-                                                    }}
-                                                    key={index}
+                                    {newOperators.map((entry, index) => {
+                                        return (
+                                            <Link
+                                                reloadDocument
+                                                to={entry.link}
+                                                target="_blank"
+                                                key={index}
+                                            >
+                                                <section
+                                                    className={classes.content}
                                                 >
                                                     <section
                                                         className={
-                                                            classes.content
+                                                            classes.option
                                                         }
                                                     >
                                                         <section
                                                             className={
-                                                                classes.option
+                                                                classes.outline
                                                             }
+                                                        />
+                                                        <section
+                                                            className={`${classes.text} ${classes.container}`}
                                                         >
                                                             <section
                                                                 className={
-                                                                    classes.outline
+                                                                    classes.type
                                                                 }
-                                                            />
+                                                            >
+                                                                <CharIcon
+                                                                    type={
+                                                                        entry.type
+                                                                    }
+                                                                    viewBox={
+                                                                        entry.type ===
+                                                                        'operator'
+                                                                            ? '0 0 88.969 71.469'
+                                                                            : '0 0 94.563 67.437'
+                                                                    }
+                                                                />
+                                                            </section>
                                                             <section
-                                                                className={`${classes.text} ${classes.container}`}
+                                                                className={
+                                                                    classes.title
+                                                                }
+                                                            >
+                                                                {language ===
+                                                                'zh-CN'
+                                                                    ? entry.type ===
+                                                                      'skin'
+                                                                        ? `${
+                                                                              entry
+                                                                                  .skinName[
+                                                                                  'zh-CN'
+                                                                              ]
+                                                                          } · ${entry.operatorName}`
+                                                                        : entry.operatorName
+                                                                    : entry
+                                                                          .skinName[
+                                                                          'en-US'
+                                                                      ]}
+                                                            </section>
+                                                            <section
+                                                                className={
+                                                                    classes[
+                                                                        'arrow-icon'
+                                                                    ]
+                                                                }
                                                             >
                                                                 <section
                                                                     className={
-                                                                        classes.type
+                                                                        classes.bar
                                                                     }
-                                                                >
-                                                                    <CharIcon
-                                                                        type={
-                                                                            entry.type
-                                                                        }
-                                                                        viewBox={
-                                                                            entry.type ===
-                                                                            'operator'
-                                                                                ? '0 0 88.969 71.469'
-                                                                                : '0 0 94.563 67.437'
-                                                                        }
-                                                                    />
-                                                                </section>
+                                                                ></section>
                                                                 <section
                                                                     className={
-                                                                        classes.title
+                                                                        classes.bar
                                                                     }
-                                                                >
-                                                                    {language ===
-                                                                    'zh-CN'
-                                                                        ? entry.type ===
-                                                                          'skin'
-                                                                            ? `${
-                                                                                  entry
-                                                                                      .skinName[
-                                                                                      'zh-CN'
-                                                                                  ]
-                                                                              } · ${entry.operatorName}`
-                                                                            : entry.operatorName
-                                                                        : entry
-                                                                              .skinName[
-                                                                              'en-US'
-                                                                          ]}
-                                                                </section>
+                                                                ></section>
                                                                 <section
                                                                     className={
-                                                                        classes[
-                                                                            'arrow-icon'
-                                                                        ]
+                                                                        classes.bar
                                                                     }
-                                                                >
-                                                                    <section
-                                                                        className={
-                                                                            classes.bar
-                                                                        }
-                                                                    ></section>
-                                                                    <section
-                                                                        className={
-                                                                            classes.bar
-                                                                        }
-                                                                    ></section>
-                                                                    <section
-                                                                        className={
-                                                                            classes.bar
-                                                                        }
-                                                                    ></section>
-                                                                    <section
-                                                                        className={
-                                                                            classes.bar
-                                                                        }
-                                                                    ></section>
-                                                                </section>
+                                                                ></section>
+                                                                <section
+                                                                    className={
+                                                                        classes.bar
+                                                                    }
+                                                                ></section>
                                                             </section>
                                                         </section>
                                                     </section>
-                                                </Link>
-                                            )
-                                        })}
+                                                </section>
+                                            </Link>
+                                        )
+                                    })}
                                 </section>
                             </section>
                         </section>
                         <section className={classes.date}>
-                            {officialUpdate.latest}
+                            {newOperators[0].date}
                         </section>
                     </section>
                     <Border />

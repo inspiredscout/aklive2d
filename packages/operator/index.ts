@@ -1,21 +1,20 @@
-import { TitleLanguages } from './../config/types'
 import path from 'node:path'
-import { yaml, file, alphaComposite } from '@aklive2d/libs'
 import config from '@aklive2d/config'
-import { envParser } from '@aklive2d/libs'
+import { alphaComposite, envParser, file, yaml } from '@aklive2d/libs'
 import { mapping as officialInfoMapping } from '@aklive2d/official-info'
-import type {
-    Config,
-    AssetsJson,
-    CharacterTableJson,
-    SkinTableJson,
-} from './types.ts'
+import { TitleLanguages } from './../config/types'
 import {
     findLogo,
-    findSkinEntry,
     findSkel,
+    findSkinEntry,
     getActualFilename,
 } from './libs/utils.ts'
+import type {
+    AssetsJson,
+    CharacterTableJson,
+    Config,
+    SkinTableJson,
+} from './types.ts'
 
 export const AUTO_UPDATE_FOLDER = path.resolve(
     import.meta.dirname,
@@ -159,10 +158,11 @@ const generateMapping = () => {
                     : operatorInfo.skinName['en-US']
             const skinEntry = findSkinEntry(skinTable, name, type)
             operator.filename = skinEntry.dynIllustId.replace(/_2$/, '')
-            operator.fallback_name =
+            operator.portrait_filename =
                 type === 'skin'
                     ? skinEntry.skinId.replace(/@/, '_')
                     : `${skinEntry.charId}_2`
+            operator.fallback_name = `${operator.portrait_filename}${operator.isSP ? '_sp' : ''}`
 
             const regions = Object.keys(
                 operator.codename
